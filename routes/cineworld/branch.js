@@ -1,3 +1,4 @@
+import puppeteer from "puppeteer";
 
 import { isNonEmptyString } from "@lewishowles/helpers/string";
 
@@ -10,8 +11,9 @@ export default async (request, response) => {
 
 	try {
 		const branchUrl = getBranchUrl(url);
+		const data = await loadBranchData(branchUrl);
 
-		response.json({ branchUrl });
+		return response.json({ data });
 	} catch(error) {
 		return response.status(400).json({ error: error.message });
 	}
@@ -36,4 +38,57 @@ function getBranchUrl(url) {
 	} catch {
 		throw new Error("The provided URL doesn't seem to be correct.");
 	}
+}
+
+/**
+ * Load the desired information for our page, based on loading that page in
+ * puppeteer and querying the result.
+ *
+ * @param  {string}  url
+ *     The URL of the page to load.
+ */
+async function loadBranchData(url) {
+	const browser = await puppeteer.launch({
+		args: ["--no-sandbox", "--disable-setuid-sandbox"],
+	});
+
+	const page = await browser.newPage();
+
+	await page.goto(url, {
+		waitUntil: "networkidle2",
+		timeout: 60000,
+	});
+
+	// Load our page and retrieve the required data.
+	const listings = await page.evaluate(async() => {
+		/**
+		 * For a given selector, attempt to retrieve its text content. If we
+		 * cannot, simply return an empty string.
+		 *
+		 * @param  {object}  basis
+		 *     The basis, within which we search for our selector. For example,
+		 *     `document`.
+		 * @param  {string}  selector
+		 *     The selector for the element to read.
+		 */
+		function getTextContentForSelector(selector) {
+			try {
+				const element = document.querySelector(selector);
+
+				return element.textContent;
+			} catch {
+				return "";
+			}
+		}
+
+		return {
+			name: window.name,
+			description: getTextContentForSelector(".subheading"),
+			movieCount: document.querySelectorAll(".movie-row").length,
+		};
+	});
+
+	await browser.close();
+
+	return listings;
 }

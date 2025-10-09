@@ -8,7 +8,11 @@ export default [
 	},
 	{
 		languageOptions: {
-			globals: globals.node,
+			globals: {
+				...globals.node,
+				document: true,
+				window: true,
+			},
 		},
 	},
 	pluginJs.configs.recommended,
