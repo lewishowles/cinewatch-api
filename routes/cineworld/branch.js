@@ -1,5 +1,6 @@
 import puppeteer from "puppeteer";
 
+import { isNonEmptyArray } from "@lewishowles/helpers/array";
 import { isNonEmptyString } from "@lewishowles/helpers/string";
 
 /**
@@ -120,12 +121,11 @@ async function loadBranchData(url) {
 		const days = getTextContentsForSelector(document.querySelector(".qb-days-group"), ".btn-default");
 		// Our list of available dates. We start with today, and work forward,
 		// based on the number of days returned.
-		const dates = await getDates(days.length);
+		const dates = await getDates(days);
 
 		return {
 			name: window.name,
 			description: getTextContentForSelector(document, ".subheading"),
-			days,
 			dates,
 		};
 	});
@@ -139,27 +139,26 @@ async function loadBranchData(url) {
  * Retrieve a number of dates, corresponding to the provided length, and
  * starting with today, in the format YYYY-MM-DD.
  *
- * @param  {number}  length
+ * @param  {number}  days
  *     The number of dates to retrieve.
  */
-function getDates(length) {
-	if (!Number.isInteger(length) || length <= 0) {
+function getDates(days) {
+	if (!isNonEmptyArray(days)) {
 		return [];
 	}
 
-	const dates = [];
-
-	for (let i = 0; i < length; i++) {
+	return days.map((day, index) => {
 		const date = new Date();
 
-		date.setDate(date.getDate() + i);
+		date.setDate(date.getDate() + index);
 
 		const yyyy = date.getFullYear();
 		const mm = String(date.getMonth() + 1).padStart(2, "0");
 		const dd = String(date.getDate()).padStart(2, "0");
 
-		dates.push(`${yyyy}-${mm}-${dd}`);
-	}
-
-	return dates;
+		return {
+			day,
+			date: `${yyyy}-${mm}-${dd}`,
+		};
+	});
 }
