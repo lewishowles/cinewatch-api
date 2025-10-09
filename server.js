@@ -1,13 +1,13 @@
-import express from 'express';
+import express from "express";
+import getBranchDetails from "./routes/cineworld/branch.js";
 
 // Set up our app. Render sets our port via the PORT environment variable.
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Define our endpoint
-app.get('/api/cineworld', async (req, res) => {
-	res.json({ message: "Hello" });
-});
+// Retrieve information for a branch, allowing the user to confirm it is
+// correct, and choose from available dates.
+app.get("/api/cineworld/branch", getBranchDetails);
 
 // Start the server
 app.listen(PORT, () => {
