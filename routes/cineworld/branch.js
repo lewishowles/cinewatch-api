@@ -59,11 +59,13 @@ async function loadBranchData(url) {
 		timeout: 60000,
 	});
 
+	await page.exposeFunction("getDates", getDates);
+
 	// Load our page and retrieve the required data.
 	const listings = await page.evaluate(async() => {
 		/**
-		 * For a given selector, attempt to retrieve its text content. If we
-		 * cannot, simply return an empty string.
+		 * For a given selector, attempt to retrieve a single element's text
+		 * content. If we cannot, simply return an empty string.
 		 *
 		 * @param  {object}  basis
 		 *     The basis, within which we search for our selector. For example,
@@ -71,24 +73,93 @@ async function loadBranchData(url) {
 		 * @param  {string}  selector
 		 *     The selector for the element to read.
 		 */
-		function getTextContentForSelector(selector) {
+		function getTextContentForSelector(basis, selector) {
 			try {
-				const element = document.querySelector(selector);
+				const element = basis.querySelector(selector);
 
-				return element.textContent;
+				return element.textContent.trim();
 			} catch {
 				return "";
 			}
 		}
 
+		/**
+		 * For a given selector, attempt to retrieve the text content for all
+		 * matching elements. If we cannot, simply return an empty string.
+		 *
+		 * @param  {object}  basis
+		 *     The basis, within which we search for our selector. For example,
+		 *     `document`.
+		 * @param  {string}  selector
+		 *     The selector for the element to read.
+		 */
+		function getTextContentsForSelector(basis, selector) {
+			try {
+				const elements = basis.querySelectorAll(selector);
+
+				const textContent = [];
+
+				elements.forEach(element => {
+					try {
+						textContent.push(element.textContent.trim());
+					} catch {
+						// Intentionally empty
+					}
+				});
+
+				return textContent;
+			} catch {
+				return [];
+			}
+		}
+
+		// Our list of available days to choose from. These days are those
+		// displayed by default. More days are available, but only advanced
+		// screenings are generally shown there, which doesn't suit our
+		// use-case.
+		const days = getTextContentsForSelector(document.querySelector(".qb-days-group"), ".btn-default");
+		// Our list of available dates. We start with today, and work forward,
+		// based on the number of days returned.
+		const dates = await getDates(days.length);
+
 		return {
 			name: window.name,
-			description: getTextContentForSelector(".subheading"),
-			movieCount: document.querySelectorAll(".movie-row").length,
+			description: getTextContentForSelector(document, ".subheading"),
+			days,
+			dates,
 		};
 	});
 
 	await browser.close();
 
 	return listings;
+}
+
+/**
+ * Retrieve a number of dates, corresponding to the provided length, and
+ * starting with today, in the format YYYY-MM-DD.
+ *
+ * @param  {number}  length
+ *     The number of dates to retrieve.
+ */
+function getDates(length) {
+	if (!Number.isInteger(length) || length <= 0) {
+		return [];
+	}
+
+	const dates = [];
+
+	for (let i = 0; i < length; i++) {
+		const date = new Date();
+
+		date.setDate(date.getDate() + i);
+
+		const yyyy = date.getFullYear();
+		const mm = String(date.getMonth() + 1).padStart(2, "0");
+		const dd = String(date.getDate()).padStart(2, "0");
+
+		dates.push(`${yyyy}-${mm}-${dd}`);
+	}
+
+	return dates;
 }
