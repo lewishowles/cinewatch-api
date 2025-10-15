@@ -12,6 +12,7 @@ export default [
 				...globals.node,
 				document: true,
 				window: true,
+				Node: true,
 			},
 		},
 	},
