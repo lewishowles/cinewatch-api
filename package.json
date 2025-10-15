@@ -1,5 +1,6 @@
 {
 	"name": "cinewatch-api",
+	"description": "Get the details of available films for a given cinema branch on a given day.",
 	"version": "0.0.1",
 	"type": "module",
 	"main": "server.js",
