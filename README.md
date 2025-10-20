@@ -6,42 +6,43 @@ The Cinewatch API acts as a middle-ground between cinema listings pages and the 
 
 A sample response might look as follows:
 
-
 ```json
 {
 	"data": {
-		"branch_name": "Ashton-under-Lyne",
-		"branch_description": "Cineworld Ashton is a great 14 screen cinema, with local transport links, Starbucks and a wide range of restaurants nearby.",
-		"booking_dates": [
-			{
-				"day": "Today",
-				"date": "2025-10-15"
-			},
-			{
-				"day": "Thu",
-				"date": "2025-10-16"
-			},
-			{
-				"day": "Fri",
-				"date": "2025-10-17"
-			},
-			{
-				"day": "Sat",
-				"date": "2025-10-18"
-			},
-			{
-				"day": "Sun",
-				"date": "2025-10-19"
-			},
-			{
-				"day": "Mon",
-				"date": "2025-10-20"
-			},
-			{
-				"day": "Tue",
-				"date": "2025-10-21"
-			}
-		],
+		"branch": {
+			"name": "Ashton-under-Lyne",
+			"description": "Cineworld Ashton is a great 14 screen cinema, with local transport links, Starbucks and a wide range of restaurants nearby.",
+			"dates": [
+				{
+					"day": "Today",
+					"date": "2025-10-15"
+				},
+				{
+					"day": "Thu",
+					"date": "2025-10-16"
+				},
+				{
+					"day": "Fri",
+					"date": "2025-10-17"
+				},
+				{
+					"day": "Sat",
+					"date": "2025-10-18"
+				},
+				{
+					"day": "Sun",
+					"date": "2025-10-19"
+				},
+				{
+					"day": "Mon",
+					"date": "2025-10-20"
+				},
+				{
+					"day": "Tue",
+					"date": "2025-10-21"
+				}
+			],
+		},
 		"films": [
 			{
 				"title": "Tron: Ares",

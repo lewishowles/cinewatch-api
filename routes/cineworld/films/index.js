@@ -1,5 +1,4 @@
 import puppeteer from "puppeteer";
-import selectors from "./selectors.js";
 
 import { isNonEmptyArray } from "@lewishowles/helpers/array";
 import { isNonEmptyString } from "@lewishowles/helpers/string";
@@ -161,6 +160,29 @@ async function loadBranchData(url) {
 			} catch {
 				return "";
 			}
+		}
+
+		/**
+		 * Get the details of the branch represented on the current page.
+		 */
+		async function getBranchDetails() {
+			// The name of this branch.
+			const name = window.name;
+			// A description for this branch.
+			const description = getTextContentForSelector(document, ".subheading");
+			// Our list of available days to choose from. These days are those
+			// displayed by default, and start with "Today". More days are
+			// available via a calendar, but only advanced screenings are
+			// generally shown there, which doesn't suit our use-case.
+			const days = getTextContentsForSelector(document.querySelector(".qb-days-group"), ".btn-default");
+			// Our list of available dates.
+			const dates = await getDatesFromDays(days);
+
+			return {
+				name,
+				description,
+				dates,
+			};
 		}
 
 		/**
@@ -371,24 +393,13 @@ async function loadBranchData(url) {
 			return films;
 		}
 
-		// The name of this branch.
-		const branch_name = window.name;
-		// A description for this branch.
-		const branch_description = getTextContentForSelector(document, ".subheading");
-		// Our list of available days to choose from. These days are those
-		// displayed by default, and start with "Today". More days are available
-		// via a calendar, but only advanced screenings are generally shown
-		// there, which doesn't suit our use-case.
-		const days = getTextContentsForSelector(document.querySelector(".qb-days-group"), ".btn-default");
-		// Our list of available dates.
-		const booking_dates = await getDatesFromDays(days);
+		// Our branch details.
+		const branch = await getBranchDetails();
 		// The available films for this branch.
 		const films = getFilmDetails();
 
 		return {
-			branch_name,
-			branch_description,
-			booking_dates,
+			branch,
 			films,
 		};
 	});
