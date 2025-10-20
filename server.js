@@ -1,9 +1,15 @@
+import cors from "cors";
 import express from "express";
 import getFilmListings from "./routes/cineworld/films/index.js";
 
 // Set up our app. Render sets our port via the PORT environment variable.
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Allow CORS from localhost (any port)
+app.use(cors({
+	origin: /^http:\/\/localhost(:\d+)?$/,
+}));
 
 // Retrieve information for a branch, allowing the user to confirm it is
 // correct, and choose from available dates.
