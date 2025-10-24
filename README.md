@@ -59,6 +59,7 @@ A sample response might look as follows:
 				"duration_minutes": 119,
 				"screenings": [
 					{
+						"id": "WzEeBOqbMducBQqmERDCF",
 						"label": "2D",
 						"subtitled": false,
 						"times": [
@@ -109,6 +110,7 @@ A sample response might look as follows:
 						]
 					},
 					{
+						"id": "D6DYe9Jz5im2Gi2Ame8kM",
 						"label": "IMAX 2D",
 						"subtitled": false,
 						"times": [
@@ -154,6 +156,7 @@ A sample response might look as follows:
 						]
 					},
 					{
+						"id": "IVlMo4twUo3y3aURIO91O",
 						"label": "IMAX 3D",
 						"subtitled": false,
 						"times": [
