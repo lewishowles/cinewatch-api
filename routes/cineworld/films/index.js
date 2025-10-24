@@ -1,7 +1,7 @@
-import puppeteer from "puppeteer";
-
 import { isNonEmptyArray } from "@lewishowles/helpers/array";
 import { isNonEmptyString } from "@lewishowles/helpers/string";
+import { nanoid } from "nanoid";
+import puppeteer from "puppeteer";
 
 /**
  * Given the URL for a branch page, retrieve the list of films available at that
@@ -14,7 +14,7 @@ export default async (request, response) => {
 		const branchUrl = getBranchUrl(url);
 		const data = await loadBranchData(branchUrl);
 
-		return response.json({ data });
+		return response.json(data);
 	} catch(error) {
 		return response.status(400).json({ error: error.message });
 	}
@@ -61,6 +61,7 @@ async function loadBranchData(url) {
 	});
 
 	await page.exposeFunction("getDatesFromDays", getDatesFromDays);
+	await page.exposeFunction("nanoid", nanoid);
 
 	// Load our page and retrieve the required data.
 	const listings = await page.evaluate(async() => {
@@ -371,14 +372,18 @@ async function loadBranchData(url) {
 		 * rating. Films available to book will include times of those showings, and
 		 * films coming soon will include the first date that film is available.
 		 */
-		function getFilmDetails() {
-			const films = [];
+		async function getFilmDetails() {
+			// We have to use an async process here because nanoid is being
+			// passed in to page.evaluate, which results in function being
+			// async.
+			const filmWrappers = Array.from(document.querySelectorAll(".qb-movie"));
 
-			document.querySelectorAll(".qb-movie").forEach(film => {
+			const films = await Promise.all(filmWrappers.map(async (film) => {
 				const duration = getFilmDuration(film);
 
-				films.push({
+				return {
 					title: getFilmTitle(film),
+					id: await nanoid(),
 					url: getFilmDetailsUrl(film),
 					poster: {
 						url: getFilmPosterUrl(film),
@@ -387,8 +392,8 @@ async function loadBranchData(url) {
 					genre: getFilmGenreText(film),
 					duration_minutes: duration,
 					screenings: getFilmScreenings(film, duration),
-				});
-			});
+				};
+			}));
 
 			return films;
 		}
@@ -396,7 +401,7 @@ async function loadBranchData(url) {
 		// Our branch details.
 		const branch = await getBranchDetails();
 		// The available films for this branch.
-		const films = getFilmDetails();
+		const films = await getFilmDetails();
 
 		return {
 			branch,
