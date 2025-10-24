@@ -289,7 +289,7 @@ async function loadBranchData(url) {
 		 * @returns  {array}
 		 *     The list of screening types, and the times of each film within.
 		 */
-		function getFilmScreenings(film, duration) {
+		async function getFilmScreenings(film, duration) {
 			if (!(film instanceof Node)) {
 				return [];
 			}
@@ -300,15 +300,19 @@ async function loadBranchData(url) {
 				return [];
 			}
 
-			const screenings = [];
+			// We have to use an async process here because nanoid is being
+			// passed in to page.evaluate, which results in function being
+			// async.
+			const screeningWrappers = Array.from(film.querySelectorAll(".qb-movie-info-column"));
 
-			film.querySelectorAll(".qb-movie-info-column").forEach(screening => {
-				screenings.push({
+			const screenings = await Promise.all(screeningWrappers.map(async (screening) => {
+				return {
+					id: await nanoid(),
 					label: getTextContentsForSelector(screening, ".qb-screening-attributes span").join(" "),
 					subtitled: getTextContentForSelector(screening, ".qb-movie-attributes").includes("Subtitled"),
 					times: getScreeningTimes(screening, duration),
-				});
-			});
+				};
+			}));
 
 			return screenings;
 		}
@@ -391,7 +395,7 @@ async function loadBranchData(url) {
 					rating: getFilmRating(film),
 					genre: getFilmGenreText(film),
 					duration_minutes: duration,
-					screenings: getFilmScreenings(film, duration),
+					screenings: await getFilmScreenings(film, duration),
 				};
 			}));
 
