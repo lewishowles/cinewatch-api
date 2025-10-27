@@ -64,7 +64,7 @@ async function loadBranchData(url) {
 	await page.exposeFunction("nanoid", nanoid);
 
 	// Load our page and retrieve the required data.
-	const listings = await page.evaluate(async() => {
+	const listings = await page.evaluate(async(branchUrl) => {
 		// We define a number of helper functions that rely on the document
 		// within page.evaluate, which has access to the DOM as it runs in the
 		// browser context. Methods outside the browser context cannot be
@@ -183,6 +183,7 @@ async function loadBranchData(url) {
 				name,
 				description,
 				dates,
+				url: branchUrl,
 			};
 		}
 
@@ -411,7 +412,7 @@ async function loadBranchData(url) {
 			branch,
 			films,
 		};
-	});
+	}, url);
 
 
 	return listings;
