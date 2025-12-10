@@ -57,7 +57,7 @@ async function loadBranchData(url) {
 
 	await page.goto(url, {
 		waitUntil: "networkidle2",
-		timeout: 60000,
+		timeout: 120000,
 	});
 
 	await page.exposeFunction("getDatesFromDays", getDatesFromDays);
