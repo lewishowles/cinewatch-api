@@ -1,5 +1,4 @@
-import { isNonEmptyArray } from "@lewishowles/helpers/array";
-import { isNonEmptyString } from "@lewishowles/helpers/string";
+import { getBranchUrl, getDatesFromDays } from "../../../src/helpers.js";
 import { nanoid } from "nanoid";
 import puppeteer from "puppeteer";
 
@@ -19,27 +18,6 @@ export default async (request, response) => {
 		return response.status(422).json({ error: error.message });
 	}
 };
-
-/**
- * Given a provided URL, standardise the URL into something that can be used to
- * load the appropriate Cineworld page.
- *
- * @param  {string}  url
- *     The provided URL from which to determine our base branch URL
- */
-function getBranchUrl(url) {
-	if (!isNonEmptyString(url)) {
-		throw new Error("We couldn't find a URL for the desired branch.");
-	}
-
-	try {
-		const parsedUrl = new URL(url);
-
-		return `${parsedUrl.origin}${parsedUrl.pathname}`;
-	} catch {
-		throw new Error("The provided URL doesn't seem to be correct.");
-	}
-}
 
 /**
  * Load the desired information for our page, based on loading that page in
@@ -176,7 +154,9 @@ async function loadBranchData(url) {
 			// available via a calendar, but only advanced screenings are
 			// generally shown there, which doesn't suit our use-case.
 			const days = getTextContentsForSelector(document.querySelector(".qb-days-group"), ".btn-default");
-			// Our list of available dates.
+			// Our list of available dates, created from a list of days of the
+			// week, starting with "Today", based on the structure of the
+			// Cineworld website.
 			const dates = await getDatesFromDays(days);
 
 			return {
@@ -416,32 +396,4 @@ async function loadBranchData(url) {
 
 
 	return listings;
-}
-
-/**
- * Retrieve a number of dates, corresponding to the provided length, and
- * starting with today, in the format YYYY-MM-DD.
- *
- * @param  {number}  days
- *     The number of dates to retrieve.
- */
-function getDatesFromDays(days) {
-	if (!isNonEmptyArray(days)) {
-		return [];
-	}
-
-	return days.map((day, index) => {
-		const date = new Date();
-
-		date.setDate(date.getDate() + index);
-
-		const yyyy = date.getFullYear();
-		const mm = String(date.getMonth() + 1).padStart(2, "0");
-		const dd = String(date.getDate()).padStart(2, "0");
-
-		return {
-			day,
-			date: `${yyyy}-${mm}-${dd}`,
-		};
-	});
 }
