@@ -3,14 +3,15 @@ import { isNonEmptyString, ltrim } from "@lewishowles/helpers/string";
 
 /**
  * Given a provided URL, standardise the URL into something that can be used to
- * load the appropriate branch page. The only information we need for our
- * purposes are the base URL and any date specified. This is currently geared
- * toward Cineworld, based on the structure of their branch URLs.
+ * load the appropriate branch page, with optional date. The only information we
+ * need for our purposes are the base URL and any date specified. This is
+ * currently geared toward Cineworld, based on the structure of their branch
+ * URLs.
  *
  * @param  {string}  rawUrl
  *     The provided URL from which to determine our base branch URL
  */
-export function getBranchUrl(rawUrl) {
+export function getSearchData(rawUrl, date) {
 	if (!isNonEmptyString(rawUrl)) {
 		throw new Error("We couldn't find a URL for the desired branch.");
 	}
@@ -19,15 +20,30 @@ export function getBranchUrl(rawUrl) {
 		const url = new URL(rawUrl);
 		const searchParams = parseUrlParams(rawUrl);
 
-		// Start building our URL, optionally including an "at" parameter for
-		// the date if present.
-		const urlParts = [`${url.origin}${url.pathname}`];
+		// Determine any specified date, either in the URL itself or directly.
+		let selectedDate = null;
 
-		if (Object.hasOwn(searchParams, "at")) {
-			urlParts.push(`#?at=${searchParams.at}`);
+		if (isNonEmptyString(date)) {
+			selectedDate = date;
+		} else if (Object.hasOwn(searchParams, "at")) {
+			selectedDate = searchParams.at;
 		}
 
-		return urlParts.filter(part => part).join("");
+		// Start building our URL, optionally including an "at" parameter for
+		// the date if present. The date can be present either in parameters, or
+		// provided directly, which will take precedence.
+		const baseUrl = `${url.origin}${url.pathname}`;
+		const urlParts = [baseUrl];
+
+		if (isNonEmptyString(selectedDate)) {
+			urlParts.push(`#?at=${selectedDate}`);
+		}
+
+		return {
+			baseUrl,
+			fullUrl: urlParts.filter(part => part).join(""),
+			selectedDate,
+		};
 	} catch {
 		throw new Error("The provided URL doesn't seem to be correct.");
 	}

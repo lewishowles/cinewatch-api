@@ -1,4 +1,4 @@
-import { getBranchUrl, getDatesFromDays } from "../../../src/helpers.js";
+import { getSearchData, getDatesFromDays } from "../../../src/helpers.js";
 import { nanoid } from "nanoid";
 import puppeteer from "puppeteer";
 
@@ -7,11 +7,11 @@ import puppeteer from "puppeteer";
  * branch to facilitate booking.
  */
 export default async (request, response) => {
-	const { url } = request.query;
+	const { url, date } = request.query;
 
 	try {
-		const branchUrl = getBranchUrl(url);
-		const data = await loadBranchData(branchUrl);
+		const searchData = getSearchData(url, date);
+		const data = await loadBranchData(searchData);
 
 		return response.json(data);
 	} catch(error) {
@@ -23,17 +23,17 @@ export default async (request, response) => {
  * Load the desired information for our page, based on loading that page in
  * puppeteer and querying the result.
  *
- * @param  {string}  url
- *     The URL of the page to load.
+ * @param  {object}  searchData
+ *     The data needed to load our branch page, including URL and optional date.
  */
-async function loadBranchData(url) {
+async function loadBranchData(searchData) {
 	const browser = await puppeteer.launch({
 		args: ["--no-sandbox", "--disable-setuid-sandbox"],
 	});
 
 	const page = await browser.newPage();
 
-	await page.goto(url, {
+	await page.goto(searchData.fullUrl, {
 		waitUntil: "networkidle2",
 		timeout: 120000,
 	});
@@ -42,7 +42,7 @@ async function loadBranchData(url) {
 	await page.exposeFunction("nanoid", nanoid);
 
 	// Load our page and retrieve the required data.
-	const listings = await page.evaluate(async(branchUrl) => {
+	const listings = await page.evaluate(async(searchData) => {
 		// We define a number of helper functions that rely on the document
 		// within page.evaluate, which has access to the DOM as it runs in the
 		// browser context. Methods outside the browser context cannot be
@@ -163,7 +163,7 @@ async function loadBranchData(url) {
 				name,
 				description,
 				dates,
-				url: branchUrl,
+				url: searchData.baseUrl,
 			};
 		}
 
@@ -325,7 +325,7 @@ async function loadBranchData(url) {
 
 				const [hours, minutes] = startTime.split(":").map(Number);
 
-				const date = new Date();
+				const date = searchData.selectedDate ? new Date(searchData.selectedDate) : new Date();
 
 				date.setHours(hours);
 				date.setMinutes(minutes + offsetMinutes);
@@ -389,10 +389,11 @@ async function loadBranchData(url) {
 		const films = await getFilmDetails();
 
 		return {
+			selected_date: searchData.selectedDate !== "undefined" ? searchData.selectedDate : null,
 			branch,
 			films,
 		};
-	}, url);
+	}, searchData);
 
 
 	return listings;

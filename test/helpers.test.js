@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { getBranchUrl, parseUrlParams, getDatesFromDays } from "../src/helpers.js";
+import { getSearchData, parseUrlParams, getDatesFromDays } from "../src/helpers.js";
 
 describe("helpers", () => {
-	describe("getBranchUrl", () => {
+	describe("getSearchData", () => {
 		describe("A non-string URL throws an error", () => {
 			test.for([
 				["boolean (true)", true],
@@ -18,20 +18,28 @@ describe("helpers", () => {
 				["null", null],
 				["undefined", undefined],
 			])("%s", ([, input]) => {
-				expect(() => getBranchUrl(input)).toThrow();
+				expect(() => getSearchData(input)).toThrow();
 			});
 		});
 
 		test("Returns the base URL with date parameter", () => {
 			const url = "https://www.cineworld.co.uk/cinemas/ashton-under-lyne/068#/buy-tickets-by-cinema?in-cinema=068&at=2026-01-09&view-mode=list";
 
-			expect(getBranchUrl(url)).toBe("https://www.cineworld.co.uk/cinemas/ashton-under-lyne/068#?at=2026-01-09");
+			expect(getSearchData(url)).toEqual({
+				baseUrl: "https://www.cineworld.co.uk/cinemas/ashton-under-lyne/068",
+				fullUrl: "https://www.cineworld.co.uk/cinemas/ashton-under-lyne/068#?at=2026-01-09",
+				selectedDate: "2026-01-09",
+			});
 		});
 
 		test("Returns the base URL if no date parameter is found", () => {
 			const url = "https://www.cineworld.co.uk/cinemas/ashton-under-lyne/068#/buy-tickets-by-cinema?in-cinema=068&view-mode=list";
 
-			expect(getBranchUrl(url)).toBe("https://www.cineworld.co.uk/cinemas/ashton-under-lyne/068");
+			expect(getSearchData(url)).toEqual({
+				baseUrl: "https://www.cineworld.co.uk/cinemas/ashton-under-lyne/068",
+				fullUrl: "https://www.cineworld.co.uk/cinemas/ashton-under-lyne/068",
+				selectedDate: null,
+			});
 		});
 	});
 
