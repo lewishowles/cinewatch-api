@@ -30,6 +30,7 @@ async function loadBranchData(searchData) {
 	const browser = await puppeteer.launch({
 		args: ["--no-sandbox", "--disable-setuid-sandbox"],
 		headless: true,
+		cacheDirectory: process.env.PUPPETEER_CACHE_DIR,
 	});
 
 	const page = await browser.newPage();
