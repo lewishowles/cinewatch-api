@@ -6,9 +6,29 @@ import getFilmListings from "./routes/cineworld/films/index.js";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Allow CORS from localhost (any port)
+// Allow CORS from our allowed domains.
+const allowedOrigins = [
+	/^http:\/\/localhost(:\d+)?$/,
+	/^https:\/\/(www\.)?lewishowles\.github\.io(\/.*)?$/,
+	/^https:\/\/([a-zA-Z0-9-]+\.)*howles\.dev(\/.*)?$/,
+];
+
 app.use(cors({
-	origin: /^http:\/\/localhost(:\d+)?$/,
+	origin(origin, callback) {
+		// This lets us allow non-browser tools with no origin, such as curl,
+		// health checks, etc.
+		if (!origin) {
+			return callback(null, true);
+		}
+
+		const allowed = allowedOrigins.some(pattern => pattern.test(origin));
+
+		if (allowed) {
+			return callback(null, true);
+		}
+
+		return callback(new Error("Not allowed by CORS"));
+	},
 }));
 
 // Retrieve information for a branch, allowing the user to confirm it is
