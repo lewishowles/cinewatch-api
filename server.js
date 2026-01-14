@@ -31,6 +31,11 @@ app.use(cors({
 	},
 }));
 
+// Simple health check to confirm operation.
+app.get("/health", (request, response) => {
+	response.json({ status: "ok" });
+});
+
 // Retrieve information for a branch, allowing the user to confirm it is
 // correct, and choose from available dates.
 app.get("/api/cineworld/films", getFilmListings);
